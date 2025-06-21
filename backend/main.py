@@ -108,7 +108,8 @@ def book_slot(
         event_id=event_id,
         slot_id=slot.id,
         name=booking_data.name,
-        email=booking_data.email
+        email=booking_data.email,
+        created_at=datetime.utcnow()
     )
     
     db.add(db_booking)
