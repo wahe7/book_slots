@@ -9,6 +9,8 @@ class Event(Base):
     name = Column(String, nullable=False)
     description = Column(String)
     max_bookings_per_slot = Column(Integer)
+    created_by = Column(String, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default='now()')
     slots = relationship("Slot", back_populates="event")
     bookings = relationship("Booking", back_populates="event")
 
