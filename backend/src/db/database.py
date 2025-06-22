@@ -4,10 +4,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from contextlib import contextmanager
 from dotenv import load_dotenv
 
-
-# DATABASE_URL = "postgresql://wahegurusingh@localhost/book_slot"
-
-# engine = create_engine(DATABASE_URL, echo=True)
 # Load environment variables from .env file if it exists
 load_dotenv()
 
@@ -18,7 +14,20 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://wahegurusingh@localhost/b
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+# Configure the SQLAlchemy engine
+try:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,  # Enable connection health checks
+        pool_recycle=300,    # Recycle connections after 5 minutes
+        pool_size=5,         # Number of connections to keep open
+        max_overflow=10,     # Max number of connections that can be created beyond pool_size
+        echo=False           # Set to True for SQL query logging
+    )
+    print(f"Successfully connected to database at: {DATABASE_URL.split('@')[-1]}")
+except Exception as e:
+    print(f"Error creating database engine: {e}")
+    raise
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
