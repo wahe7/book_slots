@@ -2,19 +2,25 @@ databases:
   - name: book_slot_db
     databaseName: book_slot
     user: book_slot_user
+    plan: free
 
 services:
   - type: web
     name: book-slot-backend
     runtime: python
-    buildCommand: |-
+    buildCommand: |
       pip install -r requirements.txt
       cd backend && alembic upgrade head
-    startCommand: |-
-      cd backend && uvicorn src.main:app --host 0.0.0.0 --port $PORT
+    startCommand: |
+      cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
       - key: DATABASE_URL
         fromDatabase:
           name: book_slot_db
           property: connectionString
+    autoDeploy: true
     plan: free
