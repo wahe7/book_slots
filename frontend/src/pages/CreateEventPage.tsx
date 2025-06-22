@@ -1,12 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
-import { PlusIcon, TrashIcon, CalendarIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon, CalendarIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 export default function CreateEventPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [maxBookings, setMaxBookings] = useState(1);
   const [slots, setSlots] = useState<string[]>([""]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+        navigate('/');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +31,9 @@ export default function CreateEventPage() {
         max_bookings_per_slot: maxBookings,
         slots: slotDatetimes,
       });
-      alert("Event created!");
+      
+      // Show success message with green background
+      setShowSuccess(true);
     } catch (err) {
       console.error("Failed to create event", err);
       alert("Error creating event");
@@ -36,7 +51,16 @@ export default function CreateEventPage() {
     setSlots(slots.filter((_, i) => i !== index));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Success Notification */}
+      {showSuccess && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-2">
+            <CheckCircleIcon className="h-6 w-6" />
+            <span>Event created successfully!</span>
+          </div>
+        </div>
+      )}
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="p-8">
