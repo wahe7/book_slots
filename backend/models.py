@@ -7,6 +7,7 @@ class EventCreate(BaseModel):
     description: str
     slots: List[datetime]
     max_bookings_per_slot: int
+    created_by: str
     
 class Event(EventCreate):
     id: int
@@ -14,9 +15,11 @@ class Event(EventCreate):
     description: str
     slots: List[datetime] = []
     max_bookings_per_slot: int
+    created_by: str
+    created_at: datetime = None
     
     class Config:
-      orm_mode = True
+        orm_mode = True
 
 class CreateBooking(BaseModel):
     name: str
