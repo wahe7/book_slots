@@ -24,15 +24,29 @@ class Event(EventCreate):
 class CreateBooking(BaseModel):
     name: str
     email: EmailStr
-    slot: datetime
+    slot_id: int
     
 class Booking(BaseModel):
     event_id: int
     name: str
     email: EmailStr
-    slot: datetime
+    slot_id: int    
+    class Config:
+      orm_mode = True
+
+class SlotResponse(BaseModel):
+    id: int
+    time: datetime
+    event_id: int
+    available_slots: int
+    is_available: bool
     
     class Config:
       orm_mode = True
-    
+      
+class BookingResponse(Booking):
+    slot: SlotResponse
+
+    class Config:
+        orm_mode = True
     
