@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from datetime import datetime
+import sqlalchemy.orm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -31,11 +32,20 @@ def get_db():
         db.close()
 
 # Response models
+class SlotResponse(BaseModel):
+    id: int
+    time: datetime
+    event_id: int
+    
+    class Config:
+        orm_mode = True
+
 class EventResponse(BaseModel):
     id: int
     name: str
     description: str
     max_bookings_per_slot: int
+    slots: List[SlotResponse] = []
     
     class Config:
         orm_mode = True
@@ -57,7 +67,9 @@ def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
     db_event = models.Event(
         name=event_data.name,
         description=event_data.description,
-        max_bookings_per_slot=event_data.max_bookings_per_slot
+        max_bookings_per_slot=event_data.max_bookings_per_slot,
+        created_by=event_data.created_by,
+        created_at=datetime.utcnow()
     )
     
     # Add slots
@@ -128,9 +140,14 @@ def book_slot(
 
 @app.get("/events/{event_id}", response_model=EventResponse)
 def get_event(event_id: int, db: Session = Depends(get_db)):
-    event = db.query(models.Event).filter(models.Event.id == event_id).first()
+    # Load event with its slots
+    event = db.query(models.Event).options(
+        sqlalchemy.orm.joinedload(models.Event.slots)
+    ).filter(models.Event.id == event_id).first()
+    
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
+        
     return event
 
 @app.get("/events/{event_id}/bookings", response_model=List[BookingResponse])
