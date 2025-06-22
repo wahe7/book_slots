@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
-import { format, parseISO } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { format } from 'date-fns';
 
 type Slot = {
   id: number;
@@ -29,7 +28,7 @@ export default function EventDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [formData, setFormData] = useState<BookingFormData>({
@@ -40,17 +39,20 @@ export default function EventDetailsPage() {
 
   useEffect(() => {
     const fetchEvent = async () => {
+      if (!id) return;
+      
       try {
-        setLoading(true);
+        setIsLoading(true);
         const response = await api.get(`/api/events/${id}`);
         setEvent(response.data);
-      } catch {
+        setError(null);
+      } catch (err) {
         setError("Failed to load event details. Please try again later.");
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
+    
     fetchEvent();
   }, [id]);
 
@@ -65,7 +67,7 @@ export default function EventDetailsPage() {
   const handleSlotSelect = (slotId: number) => {
     setFormData(prev => ({
       ...prev,
-      slotId: prev.slotId === slotId ? null : slotId
+      slotId
     }));
   };
 
@@ -114,17 +116,6 @@ export default function EventDetailsPage() {
     }
   };
 
-  const formatTime = (utcDateString: string) => {
-    try {
-      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const userLocalTime = toZonedTime(utcDateString, userTimeZone);
-      return format(userLocalTime, 'PPPpp (zzzz)');
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return format(parseISO(utcDateString), 'PPPpp');
-    }
-  };
-
   const formatTimeSimple = (utcDateString: string) => {
     try {
       // Parse the UTC time string (format: "2025-06-27 00:28:00")
@@ -150,7 +141,7 @@ export default function EventDetailsPage() {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
