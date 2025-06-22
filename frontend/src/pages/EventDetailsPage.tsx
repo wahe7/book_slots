@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import { format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 type Slot = {
   id: number;
@@ -99,12 +100,39 @@ export default function EventDetailsPage() {
     }
   };
 
-  const formatTime = (dateString: string) => {
+  const formatTime = (utcDateString: string) => {
     try {
-      const date = parseISO(dateString);
-      return format(date, 'MMM d, yyyy h:mm a');
-    } catch {
-      return dateString;
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const userLocalTime = toZonedTime(utcDateString, userTimeZone);
+      return format(userLocalTime, 'PPPpp (zzzz)');
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return format(parseISO(utcDateString), 'PPPpp');
+    }
+  };
+
+  const formatTimeSimple = (utcDateString: string) => {
+    try {
+      // Parse the UTC time string (format: "2025-06-27 00:28:00")
+      // Convert it to ISO format that date-fns can understand
+      const isoString = utcDateString.replace(' ', 'T') + 'Z';
+      
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const utcDate = new Date(isoString);
+      
+      // Format the date in user's local timezone
+      return {
+        date: format(utcDate, 'EEEE, MMMM d, yyyy'), // e.g., "Friday, June 27, 2025"
+        time: format(utcDate, 'h:mm a'), // e.g., "5:58 AM" (for IST timezone)
+        timezone: userTimeZone.replace('_', ' ')
+      };
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return {
+        date: 'Invalid date',
+        time: '--:--',
+        timezone: '--'
+      };
     }
   };
 
@@ -193,9 +221,19 @@ export default function EventDetailsPage() {
                           }`}
                         >
                           <div>
-                            <p className="font-medium text-gray-900">
-                              {formatTime(slot.time)}
-                            </p>
+                            <div className="font-medium">
+                              <div className="text-gray-900">
+                                {formatTimeSimple(slot.time).date}
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-lg font-semibold">
+                                  {formatTimeSimple(slot.time).time}
+                                </span>
+                                <span className="text-sm text-gray-500 ml-2">
+                                  ({formatTimeSimple(slot.time).timezone})
+                                </span>
+                              </div>
+                            </div>
                             <p className="text-sm text-gray-500 mt-1">
                               {slot.available_slots} of {event.max_bookings_per_slot} slots available
                             </p>
