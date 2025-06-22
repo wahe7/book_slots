@@ -18,7 +18,7 @@ def get_user_bookings(
     
     - **email**: The email address of the user
     """
-    user_service = UserClass(db)
+    user_service = UserService(db)
     try:
         return user_service.get_user_bookings(email)
     except Exception as e:
@@ -39,7 +39,7 @@ def get_user_booking(
     - **email**: The email address of the user
     - **booking_id**: The ID of the booking to retrieve
     """
-    user_service = UserClass(db)
+    user_service = UserService(db)
     try:
         bookings = user_service.get_user_bookings(email, db)
         booking = next((b for b in bookings if b["id"] == booking_id), None)
@@ -72,9 +72,9 @@ def cancel_user_booking(
     from ...service.booking_service import BookingService
     
     # First verify the booking belongs to this user
-    user_service = UserClass(db)
+    user_service = UserService(db)
     try:
-        bookings = user_service.get_user_bookings(email, db)
+        bookings = user_service.get_user_bookings(email)
         if not any(b["id"] == booking_id for b in bookings):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
