@@ -1,8 +1,6 @@
 from datetime import datetime
-from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
-from sqlalchemy.exc import SQLAlchemyError
 from src.db import models
 from src.schemas.booking import BookingResponse
 
@@ -31,9 +29,27 @@ class BookingService:
 
         return result
         
+    def _send_booking_confirmation(self, booking, event, slot):
+        """
+        Send booking confirmation email to the user using EmailService
+        """
+        from src.service.email_service import EmailService
+        
+        # Format the date and time in a user-friendly way
+        slot_time = slot.time.strftime("%A, %B %d, %Y at %I:%M %p")
+        
+        # Use the EmailService's booking confirmation method
+        EmailService.send_booking_confirmation(
+            to_email=booking.email,
+            name=booking.name,
+            event_name=event.name,
+            slot_time=slot_time,
+            booking_id=booking.id
+        )
+
     def create_booking(self, event_id: int, booking_data):
         """
-        Create a new booking for an event slot
+        Create a new booking for an event slot and send confirmation email
         """
         from datetime import datetime
         from sqlalchemy.exc import IntegrityError
@@ -48,9 +64,10 @@ class BookingService:
             ).first()
             
             if not slot:
+                error_msg = f"Slot {booking_data.slot_id} not found for event {event_id}"
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Slot not found for this event"
+                    detail={"detail": error_msg}
                 )
                 
             # Get the event to check max bookings
@@ -63,11 +80,12 @@ class BookingService:
             ).first()
             
             if existing_booking:
+                error_msg = f"You have already booked this slot"
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
                         "detail": "Booking failed",
-                        "error": "You have already booked this slot"
+                        "error": error_msg
                     }
                 )
                 
@@ -77,11 +95,12 @@ class BookingService:
             ).count()
             
             if booking_count >= event.max_bookings_per_slot:
+                error_msg = "This slot is already fully booked"
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={
                         "detail": "Booking failed",
-                        "error": "This slot is already fully booked"
+                        "error": error_msg
                     }
                 )
                 
@@ -94,21 +113,33 @@ class BookingService:
                 created_at=datetime.utcnow()
             )
             
-            self.db.add(booking)
-            self.db.commit()
-            self.db.refresh(booking)
-            
-            # Return the booking with related data
-            return {
-                "id": booking.id,
-                "event_id": booking.event_id,
-                "slot_id": booking.slot_id,
-                "name": booking.name,
-                "email": booking.email,
-                "created_at": booking.created_at,
-                "event_name": event.name,
-                "slot_time": slot.time.isoformat()
-            }
+            try:
+                self.db.add(booking)
+                self.db.commit()
+                self.db.refresh(booking)
+                
+                # Send confirmation email
+                try:
+                    self._send_booking_confirmation(booking, event, slot)
+                except Exception:
+                    # Don't fail the booking if email sending fails
+                    pass
+                
+                # Return the booking with related data
+                return {
+                    "id": booking.id,
+                    "event_id": booking.event_id,
+                    "slot_id": booking.slot_id,
+                    "name": booking.name,
+                    "email": booking.email,
+                    "created_at": booking.created_at,
+                    "event_name": event.name,
+                    "slot_time": slot.time.isoformat()
+                }
+                
+            except Exception:
+                self.db.rollback()
+                raise
             
         except IntegrityError as e:
             self.db.rollback()
