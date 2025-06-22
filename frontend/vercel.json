@@ -11,12 +11,8 @@
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
+      "src": "/api/(.*)",
+      "dest": "https://book-slots.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
