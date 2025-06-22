@@ -63,6 +63,13 @@ class BookingResponse(BaseModel):
 
 @app.post("/events", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
+    current_time = datetime.now(datetime.timezone.utc)
+    invalid_slots = [ slot.isoformat() for slot in event_data.slots if slot <= current_time ]
+    
+    if invalid_slots:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Time slots must be in the future. Invalid slots: {', '.join(invalid_slots)}")
+    
     # Create event
     db_event = models.Event(
         name=event_data.name,
