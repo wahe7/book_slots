@@ -6,6 +6,7 @@ import { PlusIcon, TrashIcon, CalendarIcon, CheckCircleIcon } from "@heroicons/r
 export default function CreateEventPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [creatorName, setCreatorName] = useState("");
   const [maxBookings, setMaxBookings] = useState(1);
   const [slots, setSlots] = useState<string[]>([""]);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -24,19 +25,25 @@ export default function CreateEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (!creatorName.trim()) {
+        alert("Please enter your name");
+        return;
+      }
+      
       const slotDatetimes = slots.map((s) => new Date(s).toISOString());
       await api.post("/events", {
         name,
         description,
+        created_by: creatorName.trim(),
         max_bookings_per_slot: maxBookings,
-        slots: slotDatetimes,
+        slots: slotDatetimes
       });
       
       // Show success message with green background
       setShowSuccess(true);
     } catch (err) {
       console.error("Failed to create event", err);
-      alert("Error creating event");
+      alert("Error creating event. Please try again.");
     }
   };
 
@@ -96,6 +103,21 @@ export default function CreateEventPage() {
                   placeholder="Tell us about your event..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="creator-name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Name (Creator)
+                </label>
+                <input
+                  id="creator-name"
+                  type="text"
+                  className="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                  placeholder="Enter your name"
+                  value={creatorName}
+                  onChange={(e) => setCreatorName(e.target.value)}
                   required
                 />
               </div>
