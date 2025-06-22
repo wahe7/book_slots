@@ -1,9 +1,9 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 
 class CreateBooking(BaseModel):
     name: str
-    email: EmailStr
+    email: str
     slot_id: int
 
     class Config:
