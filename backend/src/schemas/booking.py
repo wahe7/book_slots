@@ -5,6 +5,8 @@ class CreateBooking(BaseModel):
     name: str
     email: str
     slot_id: int
+    slot_time: str | None = None
+    timezone: str | None = None
 
     class Config:
         orm_mode = True
