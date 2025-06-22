@@ -78,10 +78,23 @@ export default function EventDetailsPage() {
     }
 
     try {
+      const selectedSlot = event?.slots.find(slot => slot.id === formData.slotId);
+      if (!selectedSlot) {
+        throw new Error('Selected slot not found');
+      }
+
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
+      const isoString = selectedSlot.time.replace(' ', 'T') + 'Z';
+      const utcDate = new Date(isoString);
+      const localTimeString = format(utcDate, "EEEE, MMMM d, yyyy 'at' h:mm a");
+
       await api.post(`/api/events/${id}/bookings`, {
         name: formData.name,
         email: formData.email,
         slot_id: formData.slotId,
+        slot_time: localTimeString,
+        timezone: userTimeZone
       });
       
       setBookingSuccess(true);
@@ -95,6 +108,7 @@ export default function EventDetailsPage() {
       const errorMessage = err.response?.data?.error || 
                          err.response?.data?.detail || 
                          err.response?.data?.message || 
+                         err.message ||
                          "Failed to book slot. Please try again.";
       alert(`Error: ${errorMessage}`);
     }
