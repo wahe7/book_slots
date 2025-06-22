@@ -116,30 +116,7 @@ export default function EventDetailsPage() {
     }
   };
 
-  const formatTimeSimple = (utcDateString: string) => {
-    try {
-      // Parse the UTC time string (format: "2025-06-27 00:28:00")
-      // Convert it to ISO format that date-fns can understand
-      const isoString = utcDateString.replace(' ', 'T') + 'Z';
-      
-      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const utcDate = new Date(isoString);
-      
-      // Format the date in user's local timezone
-      return {
-        date: format(utcDate, 'EEEE, MMMM d, yyyy'), // e.g., "Friday, June 27, 2025"
-        time: format(utcDate, 'h:mm a'), // e.g., "5:58 AM" (for IST timezone)
-        timezone: userTimeZone.replace('_', ' ')
-      };
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return {
-        date: 'Invalid date',
-        time: '--:--',
-        timezone: '--'
-      };
-    }
-  };
+
 
   if (isLoading) {
     return (
@@ -228,14 +205,14 @@ export default function EventDetailsPage() {
                           <div>
                             <div className="font-medium">
                               <div className="text-gray-900">
-                                {formatTimeSimple(slot.time).date}
+                                {format(new Date(slot.time.replace(' ', 'T') + 'Z'), 'EEEE, MMMM d, yyyy')}
                               </div>
                               <div className="flex items-center">
                                 <span className="text-lg font-semibold">
-                                  {formatTimeSimple(slot.time).time}
+                                  {format(new Date(slot.time.replace(' ', 'T') + 'Z'), 'h:mm a')}
                                 </span>
                                 <span className="text-sm text-gray-500 ml-2">
-                                  ({formatTimeSimple(slot.time).timezone})
+                                  ({Intl.DateTimeFormat().resolvedOptions().timeZone.replace('_', ' ')})
                                 </span>
                               </div>
                             </div>
