@@ -6,6 +6,8 @@ type Event = {
   id: number;
   name: string;
   description: string;
+  created_by: string;
+  created_at: string;
   max_bookings_per_slot: number;
 };
 
@@ -76,8 +78,13 @@ export default function HomePage() {
               >
                 <div className="p-6 space-y-3">
                   <div className="flex justify-between items-start">
-                    <h2 className="text-xl font-semibold text-gray-800">{event.name}</h2>
-                    <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-800">{event.name}</h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Created by {event.created_by || 'Unknown'}
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full h-fit">
                       {event.max_bookings_per_slot} slots
                     </span>
                   </div>
