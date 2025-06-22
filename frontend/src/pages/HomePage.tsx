@@ -15,25 +15,30 @@ export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
 
   useEffect(() => {
-    api.get('/events')
+    api.get('/api/events')
       .then(res => {setEvents(res.data)})
       .catch(err => console.error("Failed to load events", err));
   }, []);
 
   const renderCreateButton = (
-    <Link
-      to="/create-event"
-      className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 transition-colors whitespace-nowrap"
-    >
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fillRule="evenodd"
-          d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 01-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-          clipRule="evenodd"
-        />
-      </svg>
-      New Event
-    </Link>
+    <div className="mt-8 flex gap-4 justify-center">
+      <Link
+        to="/create-event"
+        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 transition-colors whitespace-nowrap">
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 01-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+            clipRule="evenodd"/>
+        </svg>
+        Create New Event
+      </Link>
+      <Link
+        to="/user-bookings"
+        className="px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        My Bookings
+      </Link>
+    </div>
   );
 
   return (
@@ -77,16 +82,11 @@ export default function HomePage() {
                 className="bg-white rounded-xl shadow hover:shadow-md transition duration-200 border"
               >
                 <div className="p-6 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-800">{event.name}</h2>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Created by {event.created_by || 'Unknown'}
-                      </p>
-                    </div>
-                    <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full h-fit">
-                      {event.max_bookings_per_slot} slots
-                    </span>
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800">{event.name}</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Created by {event.created_by || 'Unknown'}
+                    </p>
                   </div>
                   <p className="text-gray-600 line-clamp-2">
                     {event.description}
