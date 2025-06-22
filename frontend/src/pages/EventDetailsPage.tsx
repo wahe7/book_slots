@@ -41,10 +41,9 @@ export default function EventDetailsPage() {
     const fetchEvent = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/events/${id}`);
+        const response = await api.get(`/api/events/${id}`);
         setEvent(response.data);
-      } catch (err) {
-        console.error("Failed to fetch event", err);
+      } catch {
         setError("Failed to load event details. Please try again later.");
       } finally {
         setLoading(false);
@@ -78,7 +77,7 @@ export default function EventDetailsPage() {
     }
 
     try {
-      await api.post(`/events/${id}/bookings`, {
+      await api.post(`/api/events/${id}/bookings`, {
         name: formData.name,
         email: formData.email,
         slot_id: formData.slotId,
@@ -87,15 +86,16 @@ export default function EventDetailsPage() {
       setBookingSuccess(true);
       setFormData({ name: "", email: "", slotId: null });
       
-      // Refresh event data to update available slots
-      const response = await api.get(`/events/${id}`);
+      const response = await api.get(`/api/events/${id}`);
       setEvent(response.data);
       
-      // Hide success message after 3 seconds
       setTimeout(() => setBookingSuccess(false), 3000);
-    } catch (err) {
-      console.error("Failed to book slot", err);
-      alert("Failed to book slot. Please try again.");
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 
+                         err.response?.data?.detail || 
+                         err.response?.data?.message || 
+                         "Failed to book slot. Please try again.";
+      alert(`Error: ${errorMessage}`);
     }
   };
 
@@ -103,8 +103,8 @@ export default function EventDetailsPage() {
     try {
       const date = parseISO(dateString);
       return format(date, 'MMM d, yyyy h:mm a');
-    } catch (err) {
-      return dateString; // Return original string if parsing fails
+    } catch {
+      return dateString;
     }
   };
 
