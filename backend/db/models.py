@@ -33,5 +33,7 @@ class Booking(Base):
     email = Column(String, nullable=False)
     created_at = Column(DateTime, nullable=False)
     
+    __table_args__ = (UniqueConstraint('email', 'slot_id', name='unique_email_slot'),)
+
     event = relationship("Event", back_populates="bookings")
     slot = relationship("Slot", back_populates="bookings")
