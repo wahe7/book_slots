@@ -106,12 +106,19 @@ def book_slot(
     
     # Check if slot exists for this event
     slot = db.query(models.Slot).filter(
-        models.Slot.event_id == event_id,
-        models.Slot.time == booking_data.slot
+      models.Slot.time == booking_data.slot_id,
+      models.Slot.event_id == event_id,
     ).first()
     
     if not slot:
         raise HTTPException(status_code=400, detail="Invalid slot")
+    
+    current_bookings = db.query(models.Booking).filter(
+      models.Booking.slot_id == booking_data.slot_id
+    ).count()
+    
+    if current_bookings >= event.max_bookings_per_slot:
+        raise HTTPException(status_code=400, detail="This slot is fully booked")
     
     # Check for existing booking with same email for this slot
     existing_booking = db.query(models.Booking).filter(
