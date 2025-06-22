@@ -1,14 +1,47 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "../services/api";
-import { PlusIcon, TrashIcon, CalendarIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
+import { PlusIcon, TrashIcon, CalendarIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+
+type TimeSlotError = {
+  time: string;
+  error: string;
+};
+
+const SuccessNotification = () => (
+  <div className="fixed top-4 right-4 z-50 animate-fade-in">
+    <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-2">
+      <CheckCircleIcon className="h-6 w-6" />
+      <span>Event created successfully!</span>
+    </div>
+  </div>
+);
+
+const FormField = ({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div>
+    <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+      {label}
+    </label>
+    {children}
+  </div>
+);
 
 export default function CreateEventPage() {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [creatorName, setCreatorName] = useState("");
-  const [maxBookings, setMaxBookings] = useState(1);
-  const [slots, setSlots] = useState<string[]>([""]);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    creatorName: '',
+    maxBookings: 1,
+    slots: [''] as string[],
+  });
   const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
 
@@ -22,52 +55,80 @@ export default function CreateEventPage() {
     }
   }, [showSuccess, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (!creatorName.trim()) {
-        alert("Please enter your name");
-        return;
-      }
-      
-      const slotDatetimes = slots.map((s) => new Date(s).toISOString());
-      await api.post("/events", {
-        name,
-        description,
-        created_by: creatorName.trim(),
-        max_bookings_per_slot: maxBookings,
-        slots: slotDatetimes
-      });
-      
-      // Show success message with green background
-      setShowSuccess(true);
-    } catch (err) {
-      console.error("Failed to create event", err);
-      alert("Error creating event. Please try again.");
-    }
+  const handleInputChange = (field: keyof typeof formData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: typeof value === 'number' ? Math.max(1, value) : value,
+    }));
   };
 
   const handleSlotChange = (index: number, value: string) => {
-    const updated = [...slots];
-    updated[index] = value;
-    setSlots(updated);
+    const updatedSlots = [...formData.slots];
+    updatedSlots[index] = value;
+    handleInputChange('slots', updatedSlots);
   };
 
-  const addSlot = () => setSlots([...slots, ""]);
+  const addSlot = () => handleInputChange('slots', [...formData.slots, '']);
   const removeSlot = (index: number) =>
-    setSlots(slots.filter((_, i) => i !== index));
+    handleInputChange(
+      'slots',
+      formData.slots.filter((_, i) => i !== index)
+    );
+
+  const formatError = (error: any): string => {
+    if (!error?.response?.data) {
+      return error?.message || 'An unexpected error occurred';
+    }
+
+    const errorData = error.response.data.detail || error.response.data;
+    
+    if (errorData.errors?.slots) {
+      const slotErrors = Array.isArray(errorData.errors.slots)
+        ? errorData.errors.slots
+            .map((e: TimeSlotError) => `• ${e.time || 'Unknown time'}: ${e.error || 'Invalid slot'}`)
+            .join('\n')
+        : 'Invalid time slots';
+      
+      return [
+        errorData.detail || 'One or more time slots are invalid:',
+        '',
+        slotErrors,
+      ].join('\n');
+    }
+
+    return errorData.detail || errorData.message || 'An error occurred';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.creatorName.trim()) {
+      alert('Please enter your name');
+      return;
+    }
+
+    try {
+      const slotDatetimes = formData.slots.map(slot => new Date(slot).toISOString());
+      
+      await api.post('/api/events', {
+        name: formData.name,
+        description: formData.description,
+        created_by: formData.creatorName.trim(),
+        max_bookings_per_slot: formData.maxBookings,
+        slots: slotDatetimes,
+      });
+
+      setShowSuccess(true);
+    } catch (error: any) {
+      console.error('Error creating event:', error);
+      alert(formatError(error));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 relative">
-      {/* Success Notification */}
-      {showSuccess && (
-        <div className="fixed top-4 right-4 z-50 animate-fade-in">
-          <div className="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-2">
-            <CheckCircleIcon className="h-6 w-6" />
-            <span>Event created successfully!</span>
-          </div>
-        </div>
-      )}
+      {showSuccess && <SuccessNotification />}
+      
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="p-8">
@@ -77,66 +138,54 @@ export default function CreateEventPage() {
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="event-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Name
-                </label>
+              <FormField id="event-name" label="Event Name">
                 <input
                   id="event-name"
                   type="text"
                   className="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   placeholder="Enter event name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   required
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+              <FormField id="description" label="Description">
                 <textarea
                   id="description"
                   rows={3}
                   className="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   placeholder="Tell us about your event..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
                   required
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label htmlFor="creator-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Your Name (Creator)
-                </label>
+              <FormField id="creator-name" label="Your Name (Creator)">
                 <input
                   id="creator-name"
                   type="text"
                   className="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   placeholder="Enter your name"
-                  value={creatorName}
-                  onChange={(e) => setCreatorName(e.target.value)}
+                  value={formData.creatorName}
+                  onChange={(e) => handleInputChange('creatorName', e.target.value)}
                   required
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <label htmlFor="max-bookings" className="block text-sm font-medium text-gray-700 mb-1">
-                  Maximum Bookings per Slot
-                </label>
+              <FormField id="max-bookings" label="Maximum Bookings per Slot">
                 <input
                   id="max-bookings"
                   type="number"
                   min={1}
                   className="block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   placeholder="e.g. 10"
-                  value={maxBookings}
-                  onChange={(e) => setMaxBookings(parseInt(e.target.value))}
+                  value={formData.maxBookings}
+                  onChange={(e) => handleInputChange('maxBookings', parseInt(e.target.value) || 1)}
                   required
                 />
-              </div>
+              </FormField>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -153,7 +202,7 @@ export default function CreateEventPage() {
                   </button>
                 </div>
 
-                {slots.map((slot, idx) => (
+                {formData.slots.map((slot: string, idx: number) => (
                   <div key={idx} className="flex items-center space-x-2">
                     <div className="relative flex-1">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -167,7 +216,7 @@ export default function CreateEventPage() {
                         required
                       />
                     </div>
-                    {slots.length > 1 && (
+                    {formData.slots.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeSlot(idx)}
