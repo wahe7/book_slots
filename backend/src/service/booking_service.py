@@ -28,15 +28,13 @@ class BookingService:
         return result
         
     def _send_booking_confirmation(self, booking, event, slot):
-        """
-        Send booking confirmation email to the user using EmailService
-        """
         from src.service.email_service import EmailService
         
-        # Format the date and time in a user-friendly way
-        slot_time = slot.time.strftime("%A, %B %d, %Y at %I:%M %p")
+        if hasattr(booking, 'slot_time') and booking.slot_time:
+            slot_time = booking.slot_time
+        else:
+            slot_time = slot.time.strftime("%A, %B %d, %Y at %I:%M %p")
         
-        # Use the EmailService's booking confirmation method
         EmailService.send_booking_confirmation(
             to_email=booking.email,
             name=booking.name,
@@ -111,34 +109,25 @@ class BookingService:
                 created_at=datetime.utcnow()
             )
             
-            try:
-                self.db.add(booking)
-                self.db.commit()
-                self.db.refresh(booking)
-                
-                # Send confirmation email
-                try:
-                    self._send_booking_confirmation(booking, event, slot)
-                except Exception:
-                    # Don't fail the booking if email sending fails
-                    pass
-                
-                # Return the booking with related data
-                return {
-                    "id": booking.id,
-                    "event_id": booking.event_id,
-                    "slot_id": booking.slot_id,
-                    "name": booking.name,
-                    "email": booking.email,
-                    "created_at": booking.created_at,
-                    "event_name": event.name,
-                    "slot_time": slot.time.isoformat()
-                }
-                
-            except Exception:
-                self.db.rollback()
-                raise
+            self.db.add(booking)
+            self.db.commit()
+            self.db.refresh(booking)
             
+            try:
+                self._send_booking_confirmation(booking, event, slot)
+            except Exception as e:
+                print(f"Failed to send confirmation email: {str(e)}")
+            
+            return {
+                "id": booking.id,
+                "event_id": booking.event_id,
+                "slot_id": booking.slot_id,
+                "name": booking.name,
+                "email": booking.email,
+                "created_at": booking.created_at,
+                "event_name": event.name,
+                "slot_time": slot.time.isoformat()
+            }
         except IntegrityError as e:
             self.db.rollback()
             raise HTTPException(
