@@ -5,6 +5,7 @@ from datetime import datetime
 import sqlalchemy.orm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from sqlalchemy import func
 
 from models import EventCreate, CreateBooking
 from db.database import SessionLocal, engine
@@ -61,6 +62,16 @@ class BookingResponse(BaseModel):
     class Config:
         orm_mode = True
 
+class SlotResponse(BaseModel):
+    id: int
+    time: datetime
+    event_id: int
+    available_slots: int
+    is_available: bool
+    
+    class Config:
+        orm_mode = True
+
 @app.post("/events", response_model=EventResponse, status_code=status.HTTP_201_CREATED)
 def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
     current_time = datetime.now(datetime.timezone.utc)
@@ -89,6 +100,40 @@ def create_event(event_data: EventCreate, db: Session = Depends(get_db)):
     db.refresh(db_event)
     return db_event
 
+def get_slot_availability(db: Session, slot_id: int, max_bookings: int) -> tuple[int, bool]:
+    """
+    Returns a tuple of (available_slots, is_available)
+    """
+    # Count the number of bookings for this slot
+    booked_slots = db.query(func.count(models.Booking.id)).filter(
+        models.Booking.slot_id == slot_id
+    ).scalar() or 0
+    
+    available_slots = max(0, max_bookings - booked_slots)
+    is_available = available_slots > 0
+    
+    return available_slots, is_available
+
+@app.get("/events/{event_id}", response_model=EventResponse)
+def get_event(event_id: int, db: Session = Depends(get_db)):
+    event = db.query(models.Event).options(
+        sqlalchemy.orm.joinedload(models.Event.slots)
+    ).filter(models.Event.id == event_id).first()
+    
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    # Add availability info to each slot
+    for slot in event.slots:
+        available, is_available = get_slot_availability(
+            db, slot.id, event.max_bookings_per_slot
+        )
+        slot.available_slots = available
+        slot.is_available = is_available
+    
+    return event
+
+
 @app.get("/events", response_model=List[EventResponse])
 def list_events(db: Session = Depends(get_db)):
     return db.query(models.Event).all()
@@ -106,7 +151,7 @@ def book_slot(
     
     # Check if slot exists for this event
     slot = db.query(models.Slot).filter(
-      models.Slot.time == booking_data.slot_id,
+      models.Slot.id == booking_data.slot_id,
       models.Slot.event_id == event_id,
     ).first()
     
@@ -122,9 +167,8 @@ def book_slot(
     
     # Check for existing booking with same email for this slot
     existing_booking = db.query(models.Booking).filter(
-        models.Booking.event_id == event_id,
-        models.Booking.slot_id == slot.id,
-        models.Booking.email == booking_data.email
+      models.Booking.email == booking_data.email,
+      models.Booking.slot_id == slot.id
     ).first()
     
     if existing_booking:
