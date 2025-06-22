@@ -22,4 +22,8 @@ app.add_middleware(
 # Include API router with prefix
 app.include_router(router, prefix="/api")
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello from FastAPI on Render"}
+
 # You can now remove route logic from here and keep everything modular inside `src/routes/` and `src/services/`
