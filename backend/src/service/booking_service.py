@@ -1,8 +1,6 @@
-from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 from src.db import models
-from src.schemas.booking import BookingResponse
 
 class BookingService:
     def __init__(self, db: Session):
