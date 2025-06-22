@@ -97,8 +97,8 @@ class EventService:
             self.db.commit()
             self.db.refresh(db_event)
             
-            # Return the created event with its slots
-            return db_event
+            # Return the created event with its slots using get_event for proper serialization
+            return self.get_event(db_event.id)
             
         except Exception as e:
             self.db.rollback()
@@ -137,15 +137,18 @@ class EventService:
         # Add slot availability information
         for slot in event.slots:
             available, _ = self.get_slot_availability(slot.id, event.max_bookings_per_slot)
-            event_dict["slots"].append({
+            # Ensure we're creating a new dictionary with all required fields
+            slot_dict = {
                 "id": slot.id,
                 "time": slot.time,
                 "event_id": slot.event_id,
                 "available_slots": available,
                 "max_slots": event.max_bookings_per_slot
-            })
+            }
+            event_dict["slots"].append(slot_dict)
             
-        return event_dict
+        # Convert to a plain dictionary to ensure no SQLAlchemy models remain
+        return dict(event_dict)
     
     def get_events(self):
         from sqlalchemy.orm import joinedload
@@ -171,15 +174,17 @@ class EventService:
             # Add slot availability information
             for slot in event.slots:
                 available, _ = self.get_slot_availability(slot.id, event.max_bookings_per_slot)
-                event_dict["slots"].append({
+                slot_dict = {
                     "id": slot.id,
                     "time": slot.time,
-                    "event_id": slot.event_id,  # Make sure to include event_id
+                    "event_id": slot.event_id,
                     "available_slots": available,
                     "max_slots": event.max_bookings_per_slot
-                })
+                }
+                event_dict["slots"].append(slot_dict)
                 
-            result.append(event_dict)
+            # Convert to a plain dictionary to ensure no SQLAlchemy models remain
+            result.append(dict(event_dict))
             
         return result
         
@@ -201,36 +206,9 @@ class EventService:
         return available, is_available
     
     def update_event(self, event_id: int, event_data: EventCreate):
-        with self.db.begin():
-            event = self.db.query(models.Event).filter(models.Event.id == event_id).first()
-            if not event:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
         
-        # Update event details
-        event.name = event_data.name
-        event.description = event_data.description
-        event.max_bookings_per_slot = event_data.max_bookings_per_slot
-        
-        # Clear existing slots
-        self.db.query(models.Slot).filter(models.Slot.event_id == event_id).delete()
-        
-        # Add new slots
-        for slot_time in event_data.slots:
-            slot = models.Slot(time=slot_time, event=event, event_id=event_id)
-            self.db.add(slot)
-        
-        self.db.refresh(event)
-        
-        # Return the updated event with slots
-        event_dict = {
-            "id": event.id,
-            "name": event.name,
-            "description": event.description,
-            "created_by": event.created_by,
-            "max_bookings_per_slot": event.max_bookings_per_slot,
-            "created_at": event.created_at,
-            "slots": []
-        }
+        available = max(0, max_bookings - booking_count)
+        is_available = available > 0
         
         # Add slot information
         for slot in event.slots:
