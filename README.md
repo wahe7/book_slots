@@ -11,6 +11,21 @@ Admin Login credentials
 email: wahegurusingh2002@gmail.com
 password: 12345
 
+## ✨ Key Features
+
+### 🎟 Event Management
+- **Admin-only** event creation and management
+- Create and manage events with custom time slots (admin)
+- Set maximum bookings per time slot (admin)
+- View and manage all events in one place
+
+### 📅 Booking System
+- Users can book available time slots
+- Real-time availability updates
+- Prevent double bookings and overbooking
+- Email confirmation for all bookings
+
+
 ### 🛠 Tech Stack
 
 ### Backend
