@@ -1,5 +1,12 @@
 ## BookMySlot
 
+## vercel (Frontend)
+Link: https://book-slots.vercel.app
+
+## Render (Backend)
+Link: https://book-slots.onrender.com
+
+
 ### 🛠 Tech Stack
 
 ### Backend
