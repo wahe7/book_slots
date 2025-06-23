@@ -6,6 +6,10 @@ Link: https://book-slots.vercel.app
 ## Render (Backend)
 Link: https://book-slots.onrender.com
 
+## Amin Login
+Admin Login credentials 
+email: wahegurusingh2002@gmail.com
+password: 12345
 
 ### 🛠 Tech Stack
 
