@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import { Link } from "react-router-dom";
+import AdminLogin from "../components/AdminLogin";
 
 type Event = {
   id: number;
@@ -13,18 +14,20 @@ type Event = {
 
 export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([]);
-
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem("isAdmin") === "true");
+  
   useEffect(() => {
     api.get('/api/events')
-      .then(res => {setEvents(res.data)})
+      .then(res => setEvents(res.data))
       .catch(err => console.error("Failed to load events", err));
   }, []);
-
-  const renderCreateButton = (
-    <div className="mt-8 flex gap-4 justify-center">
+  
+  // Admin buttons - only visible to admins
+  const renderAdminButtons = isAdmin && (
+    <div className="mb-6 w-full flex justify-end gap-4">
       <Link
         to="/create-event"
-        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 transition-colors whitespace-nowrap">
+        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
           <path
             fillRule="evenodd"
@@ -33,6 +36,12 @@ export default function HomePage() {
         </svg>
         Create New Event
       </Link>
+    </div>
+  );
+
+  // My Bookings button - visible to all users
+  const renderUserBookings = (
+    <div className="mb-6 w-full flex justify-end">
       <Link
         to="/user-bookings"
         className="px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -43,19 +52,17 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-10">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <h1 className="text-3xl font-bold text-gray-800">Available Events</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Upcoming Events</h1>
+          <AdminLogin onLogin={() => setIsAdmin(localStorage.getItem("isAdmin") === "true")} />
         </div>
+
+        {renderUserBookings}
+        {renderAdminButtons}
 
         {/* Event List */}
-        <div className="mb-10">  {/* Added margin bottom */}
-          <div className="flex justify-end w-full">
-            {renderCreateButton}
-          </div>
-        </div>
-
         {events.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-10 text-center space-y-4">
             <svg
