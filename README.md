@@ -1,18 +1,22 @@
-# BookMySlot – Fullstack Hiring Challenge for New Grads
+## BookMySlot
 
-Welcome to the WizCommerce Fullstack Hiring Challenge! This challenge is designed to assess your frontend and backend skills in building a simple, real-world application. Good luck, and have fun!
+### 🛠 Tech Stack
 
-> 🧠 **Note:** This challenge is ideal for SD1 candidates applying for either frontend or backend roles — but the best candidates will attempt both parts. We'll evaluate you on your strengths, but fullstack attempts are highly appreciated.
+### Backend
+- Python 3.8+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Alembic (database migrations)
+- Pydantic (data validation)
 
----
+### Frontend
+- React with TypeScript
+- Tailwind CSS
+- Axios for API calls
+- React Router for navigation
 
-## 🔄 Project Overview
-
-Build a simple scheduling application where users can create events and let others book available time slots. Think of it as a mini-Calendly.
-
----
-
-## 🚀 Core Features
+### 🚀 Core Features
 
 ### ✏️ 1. Create Event (Private User)
 
@@ -86,58 +90,6 @@ Build a simple scheduling application where users can create events and let othe
 
 ---
 
-## 📚 Tech Stack (Suggestions)
-
-* **Frontend**: React (Vite) + TailwindCSS
-* **Backend**: FastAPI / Flask / Express.js
-* **Database**: SQLite or PostgreSQL
-* **Deployment**: Vercel (frontend) + Render / Railway (backend)
-
----
-
-## 🚗 Deployment Instructions
-
-### 🌐 Example Hosting Platforms
-
-Here are some services you can use to deploy your frontend and backend:
-
-#### Frontend (Static Hosting)
-
-* [Vercel](https://vercel.com/) – Fast CI/CD with GitHub integration
-* [Netlify](https://www.netlify.com/) – Great for React/Vite apps
-* [Cloudflare Pages](https://pages.cloudflare.com/) – Free and fast
-* [GitHub Pages](https://pages.github.com/) – Works for static SPAs
-
-#### Backend (API + Database Hosting)
-
-* [Render](https://render.com/) – Easy FastAPI or Node.js hosting
-* [Railway](https://railway.app/) – Great for fullstack apps with PostgreSQL
-* [Fly.io](https://fly.io/) – Edge deployment with Docker support
-* [Replit](https://replit.com/) – Quick backend demos
-* [Supabase](https://supabase.com/) – For database + lightweight backend APIs
-
-### 📤 Submission Form
-
-To officially submit your solution, please fill out this short [Google Form](https://forms.gle/bY9UeufzBpUhiyU5A) with the following details:
-
-* Your Full Name
-* Email Address
-* GitHub repository link (private repo with access granted)
-* Frontend deployment URL (e.g., Vercel)
-* Backend deployment URL (e.g., Render)
-* Any notes or context you want us to know
-
-This helps us track all submissions in one place and ensures nothing gets missed.
-
-1. Fork this repo
-2. Build the frontend and backend
-3. Deploy (if possible) and include URLs in your README
-4. Submit GitHub link with live demo or local instructions
-
----
-
-## ✨ Bonus Features (Optional)
-
 * Email confirmation on booking
 * Realtime booking updates
 * Event branding with image upload
@@ -147,33 +99,74 @@ This helps us track all submissions in one place and ensures nothing gets missed
 
 ## 🔍 Evaluation Rubric
 
-| Area             | What We're Looking For                        |
-| ---------------- | --------------------------------------------- |
-| ✅ Functionality  | All core features implemented, no major bugs  |
-| 📚 Code Quality  | Clear structure, modular design, comments     |
-| 🎨 UI/UX         | Responsive design, form feedback, good layout |
-| ⚙️ API Design    | RESTful, validation, edge-case handling       |
-| 🚁 Deployment    | Working links, good README, .env support      |
-| 📣 Communication | Commit hygiene, comments, README clarity      |
+## 🚀 API Endpoints
+
+### Admin
+- `POST /api/admin/login` - Admin login
+- `GET /api/admin/events` - List all events (admin)
+- `POST /api/admin/events` - Create new event (admin)
+
+### Events
+- `GET /api/events` - List all public events
+- `GET /api/events/{event_id}` - Get event details
+- `GET /api/events/{event_id}/slots` - Get available slots for event
+
+### Bookings
+- `POST /api/bookings` - Create new booking
+- `GET /api/bookings?email=user@example.com` - Get user's bookings
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- PostgreSQL
+- pipenv (for Python dependencies)
+- npm or yarn (for frontend dependencies)
+
+### Backend Setup
+```bash
+# Install dependencies
+cd backend
+pipenv install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your database credentials
+
+# Run migrations
+alembic upgrade head
+
+# Start the server
+uvicorn main:app --reload
+```
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## 🚀 Deployment
+
+### Backend
+Deploy to your preferred cloud provider (Render) with PostgreSQL add-on.
+
+### Frontend
+Build and deploy the React app to Vercel
+
 
 ---
 
-## 📄 Submission Checklist
-
-* [x] Working backend with all relevant routes and validations
-* [x] Functional frontend with event listing, detail view, and booking
-* [x] Clear GitHub repository with meaningful commit history
-* [x] Frontend deployment URL (e.g., Vercel, Netlify)
-* [x] Backend deployment URL (e.g., Render, Railway)
-* [x] Local setup instructions (with `.env.example`)
-* [x] Well-written README explaining tech choices, folder structure, and approach
-* [x] Bonus features (if implemented) clearly listed in README
-* [x] Short write-up on assumptions made and areas for improvement
-
-> 🔒 **Plagiarism Notice:** We manually review all submissions. Identical or copy-pasted codebases will be **disqualified**. Please do original work — this helps you grow and us evaluate fairly.
+## 🚀 Project Status
+✅ Core features implemented  
+🔧 Under active development  
+🚀 Ready for production deployment
 
 ---
+## Demo Video
 
-## 👊 Good Luck!
+## 🎥 Demo Video
+<video src="https://github.com/wahe7/book_slots/blob/main/demo.mp4" controls width="100%"></video>
 
-We’re excited to see your submission. Think creatively, structure your code well, and showcase your ability to work across the stack. Happy coding!
