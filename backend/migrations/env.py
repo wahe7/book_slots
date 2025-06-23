@@ -20,10 +20,10 @@ import sys
 from logging.config import fileConfig
 
 # Add the backend directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from db.database import Base
-from db.models import Event, Slot, Booking  # Import your models
+from src.db.database import Base
+from src.db.models import Event, Slot, Booking  # Import your models
 
 # For 'autogenerate' support
 target_metadata = Base.metadata
