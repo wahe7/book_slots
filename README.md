@@ -67,8 +67,5 @@ Build and deploy the React app to Vercel
 
 ---
 ## 🎥 Demo Video
-<video controls width="100%">
-  <source src="https://raw.githubusercontent.com/wahe7/book_slots/main/demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[Watch the demo](https://github.com/wahe7/book_slots/blob/main/demo.mp4)
 
